@@ -1,0 +1,37 @@
+machines:
+  - hostname: rudder-server
+    box: generic/ubuntu2204
+    ip: 192.168.56.10
+    memory: 1024
+    cpus: 1
+    role: server
+  - hostname: rudder-node-01
+    box: generic/ubuntu2204
+    ip: 192.168.56.11
+    memory: 512
+    cpus: 1
+    role: agent
+  - hostname: rudder-node-02
+    box: generic/ubuntu2204
+    ip: 192.168.56.12
+    memory: 512
+    cpus: 1
+    role: agent
+  - hostname: rudder-node-03
+    box: generic/ubuntu2204
+    ip: 192.168.56.13
+    memory: 512
+    cpus: 1
+    role: agent
+  - hostname: rudder-node-04
+    box: generic/ubuntu2204
+    ip: 192.168.56.14
+    memory: 512
+    cpus: 1
+    role: agent
+  - hostname: rudder-node-05
+    box: generic/ubuntu2204
+    ip: 192.168.56.15
+    memory: 512
+    cpus: 1
+    role: agent

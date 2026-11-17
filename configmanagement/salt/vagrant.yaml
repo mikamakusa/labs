@@ -1,0 +1,37 @@
+machines:
+  - hostname: salt-master
+    box: generic/ubuntu2204
+    ip: 192.168.56.10
+    memory: 2048
+    cpus: 2
+    role: control
+  - hostname: web1
+    box: generic/ubuntu2204
+    ip: 192.168.56.11
+    memory: 1024
+    cpus: 1
+    role: web
+  - hostname: web2
+    box: generic/ubuntu2204
+    ip: 192.168.56.12
+    memory: 1024
+    cpus: 1
+    role: web
+  - hostname: db1
+    box: generic/ubuntu2204
+    ip: 192.168.56.13
+    memory: 1024
+    cpus: 1
+    role: db
+  - hostname: db2
+    box: generic/ubuntu2204
+    ip: 192.168.56.14
+    memory: 1024
+    cpus: 1
+    role: db
+  - hostname: lb1
+    box: generic/ubuntu2204
+    ip: 192.168.56.15
+    memory: 1024
+    cpus: 1
+    role: lb

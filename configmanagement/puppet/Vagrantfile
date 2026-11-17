@@ -1,0 +1,58 @@
+require 'yaml'
+VAGRANTFILE_API_VERSION = "2"
+
+if ENV['USER_PWD'].nil? || ENV['USER_PWD'].empty?
+    raise 'Set your password in var USER_PWD, eg: USER_PWD=your_pwd vagrant up xxx'
+end
+
+config_path = File.join(File.dirname(__FILE__), 'vagrant.yml')
+settings = YAML.load_file(config_path)
+
+vagrant.configure(2) do |config|
+    if Vagrant.has_plugin?("vagrant-proxyconf")
+        config.proxy.http           = "http://#{ENV['USER']}:#{ENV['USER_PWD']}@#{ENV['PROXY_IP']}:#{ENV['PROXY_PORT']}"
+        config.proxy.https          = "https://#{ENV['USER']}:#{ENV['USER_PWD']}@#{ENV['PROXY_IP']}:#{ENV['PROXY_PORT']}"
+        config.yum_proxy.http       = "http://#{ENV['USER']}:#{ENV['USER_PWD']}@#{ENV['PROXY_IP']}:#{ENV['PROXY_PORT']}"
+        config.proxy.no_proxy       = "#{ENV['no_proxy']}"
+    end
+    
+    ENV["VAGRANT_DETECTED_OS"] = ENV["VAGRANT_DETECTED_OS"].to_s + " cygwin"
+    config.vm.box_check_update = false
+    config.vm.synced_folder ".", "/vagrant", disabled: false
+    host_entries = settings['machines'].map { |n| "#{n[:ip]} #{n[:hostname]} #{n[:hostname]}.lab.local" }.join("\n")
+
+    (settings['machines'] || []).each do |n|
+        config.vm.define n[:hostname] do |nc|
+            nc.vm.box = n[:box]
+            nc.vm.hostname = n[:hostname]
+            nc.vm.network "private_network", ip: n[:ip]
+            nc.vm.provider "virtualbox" do |ncvb|
+                ncvb.memory = n[:memory]
+                ncvb.cpus = n[:cpus]
+                ncvb.linked_clone = n[:linked_clone]
+            end
+            vm.vm.provision "shell",
+                inline: <<-SHELL
+                set -eux
+                if ! grep -q '# BEGIN PUPPET LAB HOSTS' /etc/hosts; then
+                    cat >> /etc/hosts <<'EOF'
+# BEGIN PUPPET LAB HOSTS
+#{hosts_entries}
+# END PUPPET LAB HOSTS
+EOF
+          fi
+        SHELL
+
+      if node[:role] == "master"
+        vm.vm.provision "shell",
+          path: "scripts/bootstrap-master.sh",
+          privileged: true
+      else
+        vm.vm.provision "shell",
+          path: "scripts/bootstrap-agent.sh",
+          privileged: true,
+          args: [node[:name]]
+      end
+        end
+    end
+end

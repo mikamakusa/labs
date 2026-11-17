@@ -1,0 +1,37 @@
+machines:
+  - hostname: chef-workstation
+    box: generic/ubuntu2204
+    ip: 192.168.56.10
+    memory: 2048
+    cpus: 2
+    role: workstation
+  - hostname: chef-server
+    box: generic/ubuntu2204
+    ip: 192.168.56.11
+    memory: 3072
+    cpus: 2
+    role: chef-server
+  - hostname: web1
+    box: generic/ubuntu2204
+    ip: 192.168.56.12
+    memory: 512
+    cpus: 1
+    role: node
+  - hostname: web2
+    box: generic/ubuntu2204
+    ip: 192.168.56.13
+    memory: 512
+    cpus: 1
+    role: node
+  - hostname: app1
+    box: generic/ubuntu2204
+    ip: 192.168.56.14
+    memory: 512
+    cpus: 1
+    role: node
+  - hostname: db1
+    box: generic/ubuntu2204
+    ip: 192.168.56.15
+    memory: 512
+    cpus: 1
+    role: node
