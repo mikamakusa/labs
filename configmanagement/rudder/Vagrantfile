@@ -1,42 +1,31 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
 require 'yaml'
-VAGRANTFILE_API_VERSION = "2"
 
-if ENV['USER_PWD'].nil? || ENV['USER_PWD'].empty?
-    raise 'Set your password in var USER_PWD, eg: USER_PWD=your_pwd vagrant up xxx'
-end
-
-config_path = File.join(File.dirname(__FILE__), 'vagrant.yml')
+config_path = File.join(File.dirname(__FILE__), 'vagrant.yaml')
 settings = YAML.load_file(config_path)
 
-vagrant.configure(2) do |config|
-    if Vagrant.has_plugin?("vagrant-proxyconf")
-        config.proxy.http           = "http://#{ENV['USER']}:#{ENV['USER_PWD']}@#{ENV['PROXY_IP']}:#{ENV['PROXY_PORT']}"
-        config.proxy.https          = "https://#{ENV['USER']}:#{ENV['USER_PWD']}@#{ENV['PROXY_IP']}:#{ENV['PROXY_PORT']}"
-        config.yum_proxy.http       = "http://#{ENV['USER']}:#{ENV['USER_PWD']}@#{ENV['PROXY_IP']}:#{ENV['PROXY_PORT']}"
-        config.proxy.no_proxy       = "#{ENV['no_proxy']}"
-    end
-    
-    ENV["VAGRANT_DETECTED_OS"] = ENV["VAGRANT_DETECTED_OS"].to_s + " cygwin"
-    config.vm.box_check_update = false
-    config.vm.synced_folder ".", "/vagrant", disabled: false
-    host_entries = settings['machines'].map { |n| "#{n[:ip]} #{n[:hostname]} #{n[:hostname]}.lab.local" }.join("\n")
+Vagrant.configure('2') do |conf|
+  (settings['machines'] || []).each do |vm|
+    conf.vm.define vm['name'] do |node|
+      node.vm.box = vm['box']
+      node.vm.hostname = vm['name']
 
-    (settings['machines'] || []).each do |n|
-        config.vm.define n[:hostname] do |nc|
-            nc.vm.box = n[:box]
-            nc.vm.hostname = n[:hostname]
-            nc.vm.network "private_network", ip: n[:ip]
-            nc.vm.network "forwarded_port", guest: 443, host: 8443, host_ip: "127.0.0.1",
-                auto_correct: true if n[:role] == "server"
-            nc.vm.provider "virtualbox" do |ncvb|
-                ncvb.memory = n[:memory]
-                ncvb.cpus = n[:cpus]
-                ncvb.linked_clone = n[:linked_clone]
-            end
-            nc.vm.provision "shell",
-                path: "scripts/bootstrap.sh",
-                args: [machine[:role], machine[:name]],
-                privileged: true
-        end
+      node.vm.network "private_network", ip: vm['ip']
+      node.vm.network "forwarded_port", guest: 443, host: 8443, host_ip: "127.0.0.1", auto_correct: true if vm['role'] == "server"
+
+      node.vm.provider 'virtualbox' do |vb|
+        vb.memory = vm['memory'] if vm['memory']
+        vb.cpus = vm['cpus'] if vm['cpus']
+        vb.linked_clone = vm[:linked_clone]
+      end
+
+      node.vm.provision "shell" do |s|
+        s.path = "scripts/bootstrap.sh"
+        s.args = [vm["role"], vm["name"]]
+        s.privileged = true
+      end
     end
+  end
 end
